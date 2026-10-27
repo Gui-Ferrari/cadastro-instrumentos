@@ -2,7 +2,6 @@ package com.empresa.cadastro_Instrumento.controller;
 
 import com.empresa.cadastro_Instrumento.business.InstrumentoService;
 import com.empresa.cadastro_Instrumento.infrastructure.entitys.Instrumento;
-import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -10,38 +9,35 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/instrumento")
-@RequiredArgsConstructor
 public class InstrumentoController {
 
     private final InstrumentoService instrumentoService;
 
-    @PostMapping
-    public ResponseEntity<Void> salvarInstrumento(@RequestBody Instrumento instrumento) {
-        instrumentoService.salvarInstrumento(instrumento);
-        return ResponseEntity.ok().build();
+    public InstrumentoController(InstrumentoService instrumentoService) {
+        this.instrumentoService = instrumentoService;
     }
 
     @GetMapping
-    public ResponseEntity<List<Instrumento>> listarTodos() {
+    public ResponseEntity<List<Instrumento>> listar() {
         return ResponseEntity.ok(instrumentoService.listarTodos());
     }
 
-    @GetMapping("/{numSerie}")
-    public ResponseEntity<Instrumento> buscarPorNumSerie(@PathVariable String numSerie) {
-        return ResponseEntity.ok(instrumentoService.buscarInstrumentoPorNumSerie(numSerie));
+    @PostMapping
+    public ResponseEntity<Instrumento> salvar(@RequestBody Instrumento instrumento) {
+        return ResponseEntity.ok(instrumentoService.salvar(instrumento));
     }
 
-    @PutMapping("/{numSerie}/{id}")
-    public ResponseEntity<Void> atualizarInstrumento(@PathVariable String numSerie,
-                                                     @PathVariable Integer id,
-                                                     @RequestBody Instrumento instrumento) {
-        instrumentoService.atualizarInstrumentoPorNumSerie(numSerie, id, instrumento);
-        return ResponseEntity.ok().build();
+    // Suporta PUT localhost:8080/instrumento?id=1
+    @PutMapping
+    public ResponseEntity<Instrumento> atualizar(@RequestParam Integer id, @RequestBody Instrumento instrumento) {
+        Instrumento atualizado = instrumentoService.atualizar(id, instrumento);
+        return ResponseEntity.ok(atualizado);
     }
 
-    @DeleteMapping("/{numSerie}")
-    public ResponseEntity<Void> deletarInstrumento(@PathVariable String numSerie) {
-        instrumentoService.deletarInstrumentoPorNumSerie(numSerie);
-        return ResponseEntity.ok().build();
+    // Suporta DELETE localhost:8080/instrumento?id=1
+    @DeleteMapping
+    public ResponseEntity<Void> deletar(@RequestParam Integer id) {
+        instrumentoService.deletar(id);
+        return ResponseEntity.noContent().build();
     }
 }

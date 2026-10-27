@@ -9,43 +9,36 @@ import java.util.List;
 @Service
 public class InstrumentoService {
 
-    private final InstrumentoRepository repository;
+    private final InstrumentoRepository instrumentoRepository;
 
-    public InstrumentoService(InstrumentoRepository repository) {
-        this.repository = repository;
-    }
-
-    public void salvarInstrumento(Instrumento instrumento) {
-        repository.saveAndFlush(instrumento);
+    public InstrumentoService(InstrumentoRepository instrumentoRepository) {
+        this.instrumentoRepository = instrumentoRepository;
     }
 
     public List<Instrumento> listarTodos() {
-        return repository.findAll();
+        return instrumentoRepository.findAll();
     }
 
-    public Instrumento buscarInstrumentoPorNumSerie(String numSerie) {
-        return repository.findByNumSerie(numSerie).orElseThrow(
-                () -> new RuntimeException("Instrumento não encontrado!")
-        );
+    public Instrumento salvar(Instrumento instrumento) {
+        return instrumentoRepository.save(instrumento);
     }
 
-    public void deletarInstrumentoPorNumSerie(String numSerie) {
-        repository.deleteByNumSerie(numSerie);
+    public Instrumento atualizar(Integer id, Instrumento dadosNovos) {
+        Instrumento existente = instrumentoRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Instrumento não encontrado com o ID: " + id));
+
+        if (dadosNovos.getNome() != null) existente.setNome(dadosNovos.getNome());
+        if (dadosNovos.getFamilia() != null) existente.setFamilia(dadosNovos.getFamilia());
+        if (dadosNovos.getMarca() != null) existente.setMarca(dadosNovos.getMarca());
+        if (dadosNovos.getPreco() != null && dadosNovos.getPreco() > 0) existente.setPreco(dadosNovos.getPreco());
+
+        return instrumentoRepository.save(existente);
     }
 
-    public void atualizarInstrumentoPorNumSerie(String numSerie, Integer id, Instrumento instrumento) {
-        Instrumento instrumentoEntity = repository.findById(id).orElseThrow(() ->
-                new RuntimeException("Instrumento não encontrado!"));
-
-        Instrumento instrumentoAtualizado = Instrumento.builder()
-                .id(instrumentoEntity.getId())
-                .numSerie(instrumento.getNumSerie() != null ? instrumento.getNumSerie() : instrumentoEntity.getNumSerie())
-                .nome(instrumento.getNome() != null ? instrumento.getNome() : instrumentoEntity.getNome())
-                .marca(instrumento.getMarca() != null ? instrumento.getMarca() : instrumentoEntity.getMarca())
-                .familia(instrumento.getFamilia() != null ? instrumento.getFamilia() : instrumentoEntity.getFamilia())
-                .preco(instrumento.getPreco() != null ? instrumento.getPreco() : instrumentoEntity.getPreco())
-                .build();
-
-        repository.saveAndFlush(instrumentoAtualizado);
+    public void deletar(Integer id) {
+        if (!instrumentoRepository.existsById(id)) {
+            throw new RuntimeException("Instrumento não encontrado com o ID: " + id);
+        }
+        instrumentoRepository.deleteById(id);
     }
 }
