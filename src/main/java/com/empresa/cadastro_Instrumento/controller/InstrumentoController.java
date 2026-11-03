@@ -22,22 +22,33 @@ public class InstrumentoController {
         return ResponseEntity.ok(instrumentoService.listarTodos());
     }
 
+    // GET por número de série (Exemplo: GET http://localhost:8080/instrumento/serie/SN-12345)
+    @GetMapping("/serie/{numSerie}")
+    public ResponseEntity<Instrumento> buscarPorNumSerie(@PathVariable String numSerie) {
+        return ResponseEntity.ok(instrumentoService.buscarPorNumSerie(numSerie));
+    }
+
     @PostMapping
     public ResponseEntity<Instrumento> salvar(@RequestBody Instrumento instrumento) {
         return ResponseEntity.ok(instrumentoService.salvar(instrumento));
     }
 
-    // Suporta PUT localhost:8080/instrumento?id=1
     @PutMapping
     public ResponseEntity<Instrumento> atualizar(@RequestParam Integer id, @RequestBody Instrumento instrumento) {
         Instrumento atualizado = instrumentoService.atualizar(id, instrumento);
         return ResponseEntity.ok(atualizado);
     }
 
-    // Suporta DELETE localhost:8080/instrumento?id=1
     @DeleteMapping
     public ResponseEntity<Void> deletar(@RequestParam Integer id) {
         instrumentoService.deletar(id);
+        return ResponseEntity.noContent().build();
+    }
+
+    // DELETE por número de série (Exemplo: DELETE http://localhost:8080/instrumento/serie/SN-12345)
+    @DeleteMapping("/serie/{numSerie}")
+    public ResponseEntity<Void> deletarPorNumSerie(@PathVariable String numSerie) {
+        instrumentoService.deletarPorNumSerie(numSerie);
         return ResponseEntity.noContent().build();
     }
 }

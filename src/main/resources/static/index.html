@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerenciador de Instrumentos</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Gerenciador de Instrumentos</h1>
+        <p>Sistema de controlo e cadastro de stock</p>
+    </header>
+
+    <!-- FORMULÁRIO DE CADASTRO / EDIÇÃO -->
+    <section class="card">
+        <h2 id="form-title">Cadastrar Instrumento</h2>
+        <form id="instrumento-form">
+            <input type="hidden" id="instrumento-id">
+
+            <div class="form-group">
+                <label for="nome">Nome</label>
+                <input type="text" id="nome" required placeholder="Ex: Guitarra Stratocaster">
+            </div>
+
+            <div class="form-group">
+                <label for="familia">Família</label>
+                <input type="text" id="familia" required placeholder="Ex: Cordas">
+            </div>
+
+            <div class="form-group">
+                <label for="marca">Marca</label>
+                <input type="text" id="marca" required placeholder="Ex: Fender">
+            </div>
+
+            <div class="form-group">
+                <label for="preco">Preço (R$)</label>
+                <input type="number" step="0.01" id="preco" required placeholder="Ex: 6700.00">
+            </div>
+
+            <div class="form-group">
+                <label for="numSerie">Nº de Série</label>
+                <input type="text" id="numSerie" required placeholder="Ex: SN-987654321">
+            </div>
+
+            <div class="button-group">
+                <button type="submit" class="btn-primary" id="btn-submit">Salvar Instrumento</button>
+                <button type="button" class="btn-secondary" onclick="limparFormulario()">Limpar</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- BUSCA POR NÚMERO DE SÉRIE -->
+    <section class="card">
+        <h2>Pesquisa Rápida</h2>
+        <div class="search-bar">
+            <input type="text" id="search-num-serie" placeholder="Digite o Nº de Série completo...">
+            <button class="btn-primary" onclick="buscarPorNumSerie()">Buscar</button>
+            <button class="btn-secondary" onclick="carregarInstrumentos()">Ver Todos</button>
+        </div>
+    </section>
+
+    <!-- TABELA DE INSTRUMENTOS -->
+    <section class="card">
+        <h2>Lista de Instrumentos</h2>
+        <div class="table-responsive">
+            <table>
+                <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Família</th>
+                    <th>Marca</th>
+                    <th>Preço</th>
+                    <th>Nº de Série</th>
+                    <th>Ações</th>
+                </tr>
+                </thead>
+                <tbody id="tabela-body">
+                <!-- Preenchido via JS -->
+                </tbody>
+            </table>
+        </div>
+    </section>
+</div>
+
+<script>
+    const API_URL = '/instrumento';
+
+    document.addEventListener('DOMContentLoaded', carregarInstrumentos);
+
+    document.getElementById('instrumento-form').addEventListener('submit', async (e) => {
+        e.preventDefault();
+
+        const id = document.getElementById('instrumento-id').value;
+        const instrumento = {
+            nome: document.getElementById('nome').value,
+            familia: document.getElementById('familia').value,
+            marca: document.getElementById('marca').value,
+            preco: parseFloat(document.getElementById('preco').value),
+            numSerie: document.getElementById('numSerie').value
+        };
+
+        try {
+            if (id) {
+                await fetch(`${API_URL}?id=${id}`, {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(instrumento)
+                });
+            } else {
+                await fetch(API_URL, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(instrumento)
+                });
+            }
+            limparFormulario();
+            carregarInstrumentos();
+        } catch (error) {
+            alert('Erro ao guardar o instrumento.');
+        }
+    });
+
+    async function carregarInstrumentos() {
+        try {
+            const res = await fetch(API_URL);
+            const dados = await res.json();
+            renderizarTabela(dados);
+        } catch (error) {
+            console.error('Erro ao carregar dados:', error);
+        }
+    }
+
+    async function buscarPorNumSerie() {
+        const numSerie = document.getElementById('search-num-serie').value.trim();
+        if (!numSerie) return carregarInstrumentos();
+
+        try {
+            const res = await fetch(`${API_URL}/serie/${numSerie}`);
+            if (res.ok) {
+                const item = await res.json();
+                renderizarTabela([item]);
+            } else {
+                alert('Nenhum instrumento encontrado com este número de série.');
+                renderizarTabela([]);
+            }
+        } catch (error) {
+            alert('Erro ao realizar a busca.');
+        }
+    }
+
+    async function excluirInstrumento(id) {
+        if (!confirm('Tem a certeza que deseja eliminar este registo?')) return;
+
+        try {
+            await fetch(`${API_URL}?id=${id}`, { method: 'DELETE' });
+            carregarInstrumentos();
+        } catch (error) {
+            alert('Erro ao eliminar instrumento.');
+        }
+    }
+
+    function editarInstrumento(item) {
+        document.getElementById('instrumento-id').value = item.id;
+        document.getElementById('nome').value = item.nome;
+        document.getElementById('familia').value = item.familia;
+        document.getElementById('marca').value = item.marca;
+        document.getElementById('preco').value = item.preco;
+        document.getElementById('numSerie').value = item.numSerie || '';
+
+        document.getElementById('form-title').innerText = 'Editar Instrumento';
+        document.getElementById('btn-submit').innerText = 'Atualizar Instrumento';
+    }
+
+    function limparFormulario() {
+        document.getElementById('instrumento-form').reset();
+        document.getElementById('instrumento-id').value = '';
+        document.getElementById('form-title').innerText = 'Cadastrar Instrumento';
+        document.getElementById('btn-submit').innerText = 'Salvar Instrumento';
+    }
+
+    function renderizarTabela(lista) {
+        const tbody = document.getElementById('tabela-body');
+        tbody.innerHTML = '';
+
+        if (!lista || lista.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center; color: var(--text-secondary); padding: 2rem;">Nenhum instrumento registado.</td></tr>';
+            return;
+        }
+
+        lista.forEach(item => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td><strong>#${item.id}</strong></td>
+                <td>${item.nome}</td>
+                <td><span class="badge">${item.familia}</span></td>
+                <td>${item.marca}</td>
+                <td><strong>R$ ${Number(item.preco).toFixed(2)}</strong></td>
+                <td><code>${item.numSerie || '-'}</code></td>
+                <td class="actions">
+                    <button class="btn-secondary" onclick='editarInstrumento(${JSON.stringify(item)})'>Editar</button>
+                    <button class="btn-danger" onclick="excluirInstrumento(${item.id})">Excluir</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+</script>
+</body>
+</html>

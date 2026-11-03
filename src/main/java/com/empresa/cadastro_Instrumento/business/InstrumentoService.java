@@ -19,6 +19,11 @@ public class InstrumentoService {
         return instrumentoRepository.findAll();
     }
 
+    public Instrumento buscarPorNumSerie(String numSerie) {
+        return instrumentoRepository.findByNumSerie(numSerie)
+                .orElseThrow(() -> new RuntimeException("Instrumento não encontrado com o Número de Série: " + numSerie));
+    }
+
     public Instrumento salvar(Instrumento instrumento) {
         return instrumentoRepository.save(instrumento);
     }
@@ -31,6 +36,7 @@ public class InstrumentoService {
         if (dadosNovos.getFamilia() != null) existente.setFamilia(dadosNovos.getFamilia());
         if (dadosNovos.getMarca() != null) existente.setMarca(dadosNovos.getMarca());
         if (dadosNovos.getPreco() != null && dadosNovos.getPreco() > 0) existente.setPreco(dadosNovos.getPreco());
+        if (dadosNovos.getNumSerie() != null) existente.setNumSerie(dadosNovos.getNumSerie());
 
         return instrumentoRepository.save(existente);
     }
@@ -40,5 +46,12 @@ public class InstrumentoService {
             throw new RuntimeException("Instrumento não encontrado com o ID: " + id);
         }
         instrumentoRepository.deleteById(id);
+    }
+
+    public void deletarPorNumSerie(String numSerie) {
+        if (instrumentoRepository.findByNumSerie(numSerie).isEmpty()) {
+            throw new RuntimeException("Instrumento não encontrado com o Número de Série: " + numSerie);
+        }
+        instrumentoRepository.deleteByNumSerie(numSerie);
     }
 }
